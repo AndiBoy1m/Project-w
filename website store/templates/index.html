@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Добро пожаловать в сортировщик вещей!</h2>
+<div class="row">
+    {% for cat in categories %}
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ cat }}</h5>
+                <a href="{{ url_for('category', cat_name=cat) }}" class="btn btn-primary">
+                    Просмотреть
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
