@@ -1,0 +1,8 @@
+/* Add your custom styles here */
+body {
+    padding-top: 5rem; /* Adjust to accommodate fixed header */
+}
+
+.navbar-steel {
+  background-color: #5f788a;
+}

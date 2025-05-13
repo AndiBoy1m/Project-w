@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ user.username }}'s Profile{% endblock %}
+
+{% block content %}
+    <h1>{{ user.username }}'s Profile</h1>
+    <h3 class="mt-4">Products</h3>
+    {% if products %}
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.title }}</h5>
+                    <p class="card-text">{{ product.description[:100] }}...</p>
+                    <p class="card-text"><strong>${{ product.price }}</strong></p>
+                    <a href="{{ url_for('product', id=product.id) }}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No products yet.</p>
+    {% endif %}
+{% endblock %}

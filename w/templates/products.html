@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Products{% endblock %}
+
+{% block content %}
+    <h1>All Products</h1>
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.title }}</h5>
+                    <p class="card-text">{{ product.description[:100] }}...</p>
+                    <p class="card-text"><strong>${{ product.price }}</strong></p>
+                    <a href="{{ url_for('product', id=product.id) }}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if prev_url %}
+            <li class="page-item"><a class="page-link" href="{{ prev_url }}">Previous</a></li>
+            {% endif %}
+            {% if next_url %}
+            <li class="page-item"><a class="page-link" href="{{ next_url }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ product.title }}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-8">
+            <h1>{{ product.title }}</h1>
+            <p class="text-muted">Posted by <a href="{{ url_for('profile', username=product.author.username) }}">{{ product.author.username }}</a> on {{ product.timestamp.strftime('%Y-%m-%d') }}</p>
+            <p>Category: {{ product.category }}</p>
+            <p>Price: ${{ product.price }}</p>
+            <p>{{ product.description }}</p>
+            
+            {% if current_user == product.author %}
+            <form action="{{ url_for('delete_product', id=product.id) }}" method="post">
+                <button type="submit" class="btn btn-danger">Delete Product</button>
+            </form>
+            {% endif %}
+            
+            <hr>
+            <h3>Reviews</h3>
+            {% for review in reviews %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ review.author.username }} rated {{ review.rating }}/5</h5>
+                    <p class="card-text">{{ review.text }}</p>
+                    <p class="text-muted">{{ review.timestamp.strftime('%Y-%m-%d') }}</p>
+                </div>
+            </div>
+            {% else %}
+            <p>No reviews yet.</p>
+            {% endfor %}
+            
+            {% if current_user.is_authenticated %}
+            <h4 class="mt-4">Add a Review</h4>
+            <form method="post">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    {{ form.text.label }}
+                    {{ form.text(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.rating.label }}
+                    {{ form.rating(class="form-control") }}
+                </div>
+                {{ form.submit(class="btn btn-primary") }}
+            </form>
+            {% else %}
+            <p><a href="{{ url_for('login') }}">Log in</a> to leave a review.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
