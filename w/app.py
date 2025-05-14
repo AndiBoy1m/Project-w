@@ -87,7 +87,9 @@ class RegistrationForm(FlaskForm):
     def validate_email(self, email):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
-            raise ValidationError('Пожалуйста, используйте другой email.')
+            self.email.errors.append('Этот email уже зарегистрирован.') # Добавляем ошибку в поле email
+            return False # Возвращаем False, чтобы указать, что валидация не прошла
+        return True  # Возвращаем True, если email не найден
 
 
 class ProductForm(FlaskForm):
