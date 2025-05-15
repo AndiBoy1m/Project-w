@@ -106,11 +106,11 @@ class ProductForm(FlaskForm):
         FileAllowed(['jpg', 'jpeg', 'png'], 'Только изображения!')
     ])
     category = SelectField('Категория', choices=[
-        ('electronics', 'Электроника'),
-        ('furniture', 'Мебель'),
-        ('clothing', 'Одежда'),
-        ('books', 'Книги'),
-        ('other', 'Другое')
+        ('Электроника'),
+        ('Мебель'),
+        ('Одежда'),
+        ('Книги'),
+        ('Другое')
     ], validators=[DataRequired()])
     submit = SubmitField('Добавить товар')
 
