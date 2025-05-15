@@ -18,6 +18,14 @@
             <h3 class="text-primary">{{ product.price }} руб.</h3>
             <p>{{ product.description }}</p>
 
+            {% if current_user.is_authenticated and current_user != product.author %}
+                <a href="{{ url_for('buy_product', product_id=product.id) }}" class="btn btn-success">Купить</a>
+            {% elif current_user == product.author %}
+                <p class="text-muted">Вы не можете купить свой собственный товар.</p>
+            {% else %}
+                <p><a href="{{ url_for('login') }}">Войдите</a>, чтобы купить товар.</p>
+            {% endif %}
+
             {% if current_user == product.author %}
             <div class="mb-3">
                 <a href="{{ url_for('edit_product', id=product.id) }}" class="btn btn-warning">Редактировать</a>
