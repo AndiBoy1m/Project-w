@@ -65,7 +65,7 @@ def load_user(id):
 
 
 class LoginForm(FlaskForm):
-    username = StringField('Имя пользователя', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     remember_me = BooleanField('Запомнить меня')
     submit = SubmitField('Войти')
@@ -87,9 +87,7 @@ class RegistrationForm(FlaskForm):
     def validate_email(self, email):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
-            self.email.errors.append('Этот email уже зарегистрирован.') # Добавляем ошибку в поле email
-            return False # Возвращаем False, чтобы указать, что валидация не прошла
-        return True  # Возвращаем True, если email не найден
+            raise ValidationError('Пожалуйста, используйте другой email.')
 
 
 class ProductForm(FlaskForm):
@@ -186,9 +184,9 @@ def login():
         return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = User.query.filter_by(email=form.email.data).first()
         if user is None or not user.check_password(form.password.data):
-            flash('Неверное имя пользователя или пароль')
+            flash('Неверный email или пароль')
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
