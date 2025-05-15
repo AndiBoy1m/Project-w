@@ -3,14 +3,49 @@
 
 {% block content %}
     <h1>Все товары</h1>
+
+    <!-- Форма поиска -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form action="{{ url_for('products') }}" method="get" class="form-inline">
+                <div class="input-group w-100">
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Поиск по названию товара..."
+                           value="{{ request.args.get('search', '') }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i> Найти
+                        </button>
+                        {% if request.args.get('search') %}
+                            <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Сбросить
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Результаты поиска -->
+    {% if request.args.get('search') and not products %}
+        <div class="alert alert-info">
+            По запросу "{{ request.args.get('search') }}" ничего не найдено
+        </div>
+    {% endif %}
+
     <div class="row">
         {% for product in products %}
         <div class="col-md-4 mb-4">
             <div class="card h-100">
                 {% if product.image %}
-                <img src="{{ url_for('uploaded_file', filename=product.image) }}" class="card-img-top" alt="{{ product.title }}" style="height: 200px; object-fit: cover;">
+                <img src="{{ url_for('uploaded_file', filename=product.image) }}"
+                     class="card-img-top" alt="{{ product.title }}"
+                     style="height: 200px; object-fit: cover;">
                 {% else %}
-                <img src="{{ url_for('static', filename='placeholder.jpg') }}" class="card-img-top" alt="Нет фото" style="height: 200px; object-fit: cover;">
+                <img src="{{ url_for('static', filename='placeholder.jpg') }}"
+                     class="card-img-top" alt="Нет фото"
+                     style="height: 200px; object-fit: cover;">
                 {% endif %}
                 <div class="card-body">
                     <h5 class="card-title">{{ product.title }}</h5>
@@ -20,15 +55,27 @@
                 </div>
             </div>
         </div>
+        {% else %}
+            {% if not request.args.get('search') %}
+                <div class="col-12">
+                    <div class="alert alert-info">Товары пока не добавлены</div>
+                </div>
+            {% endif %}
         {% endfor %}
     </div>
+
+    <!-- Пагинация с учетом поиска -->
     <nav aria-label="Навигация по страницам">
         <ul class="pagination">
             {% if prev_url %}
-            <li class="page-item"><a class="page-link" href="{{ prev_url }}">Назад</a></li>
+            <li class="page-item">
+                <a class="page-link" href="{{ prev_url }}&search={{ request.args.get('search', '') }}">Назад</a>
+            </li>
             {% endif %}
             {% if next_url %}
-            <li class="page-item"><a class="page-link" href="{{ next_url }}">Вперед</a></li>
+            <li class="page-item">
+                <a class="page-link" href="{{ next_url }}&search={{ request.args.get('search', '') }}">Вперед</a>
+            </li>
             {% endif %}
         </ul>
     </nav>
