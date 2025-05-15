@@ -246,7 +246,7 @@ def product(id):
         return redirect(url_for('product', id=id))
     reviews = product.reviews.order_by(Review.timestamp.desc()).all()
     return render_template('product.html', product=product, form=form,
-                           reviews=reviews)
+                           reviews=reviews, author_email=product.author.email)
 
 
 @app.route('/uploads/<filename>')
