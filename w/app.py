@@ -234,16 +234,28 @@ def register():
 
 @app.route('/products')
 def products():
+    search_query = request.args.get('search', '').strip()
     page = request.args.get('page', 1, type=int)
-    products = Product.query.order_by(Product.timestamp.desc()).paginate(
+
+    # Базовый запрос
+    products_query = Product.query
+
+    # Добавляем поиск, если есть запрос
+    if search_query:
+        products_query = products_query.filter(Product.title.ilike(f'%{search_query}%'))
+
+    # Сортировка и пагинация
+    products = products_query.order_by(Product.timestamp.desc()).paginate(
         page=page, per_page=10, error_out=False)
-    next_url = url_for('products', page=products.next_num) \
+
+    next_url = url_for('products', page=products.next_num, search=search_query) \
         if products.has_next else None
-    prev_url = url_for('products', page=products.prev_num) \
+    prev_url = url_for('products', page=products.prev_num, search=search_query) \
         if products.has_prev else None
+
     return render_template('products.html', title='Товары',
                            products=products.items, next_url=next_url,
-                           prev_url=prev_url)
+                           prev_url=prev_url, search_query=search_query)
 
 
 @app.route('/product/<int:id>', methods=['GET', 'POST'])
