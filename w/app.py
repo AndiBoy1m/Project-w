@@ -103,7 +103,8 @@ class ProductForm(FlaskForm):
     description = TextAreaField('Описание', validators=[DataRequired()])
     price = FloatField('Цена (руб)', validators=[DataRequired()])
     image = FileField('Фото товара', validators=[
-        FileAllowed(['jpg', 'jpeg', 'png'], 'Только изображения!')
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg'],
+                   'Разрешены только изображения!')
     ])
     category = SelectField('Категория', choices=[
         ('Электроника'),
@@ -130,47 +131,53 @@ def edit_product(id):
 
     form = ProductForm()
     if form.validate_on_submit():
-        # Обработка загрузки нового изображения
         if form.image.data:
-            # Удаляем старое изображение, если оно есть
             if product.image:
                 try:
                     os.remove(os.path.join(app.config['UPLOAD_FOLDER'], product.image))
                 except OSError:
                     pass
 
-            # Сохраняем новое изображение с обработкой
             image = form.image.data
             filename = secure_filename(image.filename)
+            filename = os.path.splitext(filename)[0] + '.jpg'
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-            # Открываем изображение с помощью Pillow
-            img = Image.open(image)
+            try:
+                img = Image.open(image)
+                if img.mode in ('RGBA', 'P'):
+                    img = img.convert('RGB')
 
-            # Создаем миниатюру (опционально)
-            img.thumbnail((800, 800))
+                if hasattr(img, '_getexif'):
+                    exif = img._getexif()
+                    if exif:
+                        orientation = exif.get(0x0112)
+                        if orientation == 3:
+                            img = img.rotate(180, expand=True)
+                        elif orientation == 6:
+                            img = img.rotate(270, expand=True)
+                        elif orientation == 8:
+                            img = img.rotate(90, expand=True)
 
-            # Сохраняем в формате JPEG с оптимальным качеством
-            if filename.lower().endswith(('.png', '.jpeg', '.jpg')):
-                img.save(image_path, optimize=True, quality=85)
-            else:
-                img.save(image_path + '.jpg', 'JPEG', optimize=True, quality=85)
-                filename = filename + '.jpg'
+                if img.size[0] > app.config['IMAGE_SIZE_LIMIT'][0] or img.size[1] > app.config['IMAGE_SIZE_LIMIT'][1]:
+                    img.thumbnail(app.config['IMAGE_SIZE_LIMIT'])
 
-            product.image = filename
+                img.save(image_path, 'JPEG', quality=85, optimize=True)
+                product.image = filename
 
-        # Обновляем данные товара
+            except Exception as e:
+                flash(f'Ошибка при обработке изображения: {str(e)}')
+                return redirect(url_for('edit_product', id=id))
+
         product.title = form.title.data
         product.description = form.description.data
         product.price = form.price.data
         product.category = form.category.data
-
         db.session.commit()
         flash('Товар успешно обновлен!')
         return redirect(url_for('product', id=product.id))
 
     elif request.method == 'GET':
-        # Заполняем форму текущими данными
         form.title.data = product.title
         form.description.data = product.description
         form.price.data = product.price
@@ -272,13 +279,19 @@ def add_product():
         if form.image.data:
             image = form.image.data
             filename = secure_filename(image.filename)
+            # Всегда сохраняем как JPEG
+            filename = os.path.splitext(filename)[0] + '.jpg'
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-            # Обработка изображения
             try:
+                # Открываем изображение с помощью Pillow
                 img = Image.open(image)
 
-                # Проверка и коррекция ориентации (для фото с телефонов)
+                # Конвертируем в RGB, если нужно (для PNG с прозрачностью)
+                if img.mode in ('RGBA', 'P'):
+                    img = img.convert('RGB')
+
+                # Автоповорот по EXIF (для фото с телефонов)
                 if hasattr(img, '_getexif'):
                     exif = img._getexif()
                     if exif:
@@ -294,16 +307,12 @@ def add_product():
                 if img.size[0] > app.config['IMAGE_SIZE_LIMIT'][0] or img.size[1] > app.config['IMAGE_SIZE_LIMIT'][1]:
                     img.thumbnail(app.config['IMAGE_SIZE_LIMIT'])
 
-                # Конвертация в JPEG если это не JPEG
-                if not filename.lower().endswith(('.jpg', '.jpeg')):
-                    filename = os.path.splitext(filename)[0] + '.jpg'
-                    image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-
-                # Сохранение с оптимальным качеством
+                # Сохранение в формате JPEG с оптимальным качеством
                 img.save(image_path, 'JPEG', quality=85, optimize=True)
                 image_filename = filename
+
             except Exception as e:
-                flash('Ошибка при обработке изображения: ' + str(e))
+                flash(f'Ошибка при обработке изображения: {str(e)}')
                 return redirect(url_for('add_product'))
 
         product = Product(
