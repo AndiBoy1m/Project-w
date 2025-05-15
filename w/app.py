@@ -29,7 +29,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     products = db.relationship('Product', backref='author', lazy='dynamic')
     reviews = db.relationship('Review', backref='author', lazy='dynamic')
-    purchases = db.relationship('Purchase', backref='buyer', lazy='dynamic')  # Отношение для покупок
+    purchases = db.relationship('Purchase', backref='buyer', lazy='dynamic')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -48,7 +48,7 @@ class Product(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     category = db.Column(db.String(50))
     reviews = db.relationship('Review', backref='product', lazy='dynamic')
-    purchases = db.relationship('Purchase', backref='product', lazy='dynamic')  # Отношение для покупок
+    purchases = db.relationship('Purchase', backref='product', lazy='dynamic')
 
 
 class Review(db.Model):
@@ -60,7 +60,7 @@ class Review(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
 
 
-class Purchase(db.Model):  # Добавлена модель Purchase
+class Purchase(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
     buyer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -237,14 +237,11 @@ def products():
     search_query = request.args.get('search', '').strip()
     page = request.args.get('page', 1, type=int)
 
-    # Базовый запрос
     products_query = Product.query
 
-    # Добавляем поиск, если есть запрос
     if search_query:
         products_query = products_query.filter(Product.title.ilike(f'%{search_query}%'))
 
-    # Сортировка и пагинация
     products = products_query.order_by(Product.timestamp.desc()).paginate(
         page=page, per_page=10, error_out=False)
 
@@ -291,19 +288,15 @@ def add_product():
         if form.image.data:
             image = form.image.data
             filename = secure_filename(image.filename)
-            # Всегда сохраняем как JPEG
             filename = os.path.splitext(filename)[0] + '.jpg'
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
             try:
-                # Открываем изображение с помощью Pillow
                 img = Image.open(image)
 
-                # Конвертируем в RGB, если нужно (для PNG с прозрачностью)
                 if img.mode in ('RGBA', 'P'):
                     img = img.convert('RGB')
 
-                # Автоповорот по EXIF (для фото с телефонов)
                 if hasattr(img, '_getexif'):
                     exif = img._getexif()
                     if exif:
@@ -315,11 +308,9 @@ def add_product():
                         elif orientation == 8:
                             img = img.rotate(90, expand=True)
 
-                # Ресайз если изображение слишком большое
                 if img.size[0] > app.config['IMAGE_SIZE_LIMIT'][0] or img.size[1] > app.config['IMAGE_SIZE_LIMIT'][1]:
                     img.thumbnail(app.config['IMAGE_SIZE_LIMIT'])
 
-                # Сохранение в формате JPEG с оптимальным качеством
                 img.save(image_path, 'JPEG', quality=85, optimize=True)
                 image_filename = filename
 
@@ -349,7 +340,6 @@ def delete_product(id):
     if product.author != current_user:
         abort(403)
 
-    # Удаляем изображение товара, если оно есть
     if product.image:
         try:
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], product.image))
