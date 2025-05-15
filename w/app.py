@@ -14,7 +14,6 @@ from config import Config
 from PIL import Image
 import io
 
-
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -30,6 +29,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     products = db.relationship('Product', backref='author', lazy='dynamic')
     reviews = db.relationship('Review', backref='author', lazy='dynamic')
+    purchases = db.relationship('Purchase', backref='buyer', lazy='dynamic')  # Отношение для покупок
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -48,6 +48,7 @@ class Product(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     category = db.Column(db.String(50))
     reviews = db.relationship('Review', backref='product', lazy='dynamic')
+    purchases = db.relationship('Purchase', backref='product', lazy='dynamic')  # Отношение для покупок
 
 
 class Review(db.Model):
@@ -57,6 +58,13 @@ class Review(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
+
+
+class Purchase(db.Model):  # Добавлена модель Purchase
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
+    buyer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    purchase_date = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 @login.user_loader
@@ -245,8 +253,9 @@ def product(id):
         flash('Ваш отзыв добавлен!')
         return redirect(url_for('product', id=id))
     reviews = product.reviews.order_by(Review.timestamp.desc()).all()
+    author_email = product.author.email  # Получаем email автора
     return render_template('product.html', product=product, form=form,
-                           reviews=reviews, author_email=product.author.email)
+                           reviews=reviews, author_email=author_email)
 
 
 @app.route('/uploads/<filename>')
@@ -338,6 +347,20 @@ def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
     products = user.products.order_by(Product.timestamp.desc()).all()
     return render_template('profile.html', user=user, products=products)
+
+@app.route('/buy_product/<int:product_id>')
+@login_required
+def buy_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    if product.author == current_user:
+        flash('Вы не можете купить свой собственный товар.')
+        return redirect(url_for('product', id=product_id))
+
+    purchase = Purchase(product_id=product.id, buyer_id=current_user.id)
+    db.session.add(purchase)
+    db.session.commit()
+    flash('Товар успешно куплен!')
+    return redirect(url_for('product', id=product_id))
 
 
 if __name__ == '__main__':
