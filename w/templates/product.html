@@ -13,7 +13,7 @@
             </div>
 
             <h1>{{ product.title }}</h1>
-            <p class="text-muted">Опубликовано пользователем <a href="{{ url_for('profile', username=product.author.username) }}">{{ product.author.username }}</a> {{ product.timestamp.strftime('%d.%m.%Y') }}</p>
+            <p class="text-muted">Опубликовано пользователем <a href="{{ url_for('profile', username=product.author.username) }}">{{ product.author.username }} ({{ author_email }})</a> {{ product.timestamp.strftime('%d.%m.%Y') }}</p>
             <p>Категория: {{ product.category }}</p>
             <h3 class="text-primary">{{ product.price }} руб.</h3>
             <p>{{ product.description }}</p>
