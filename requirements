@@ -1,0 +1,4 @@
+В данном коде используются библиотеки flask (Flask, render_template, flash, redirect, url_for, request, abort, send_from_directory), 
+flask_sqlalchemy (SQLAlchemy), flask_wtf  (FlaskForm),  flask_wtf.file(FileField, FileAllowed), from werkzeug.utils  (secure_filename)
+werkzeug.security (generate_password_hash, check_password_hash), wtforms (StringField, PasswordField, BooleanField, SubmitField, TextAreaField, FloatField, IntegerField, SelectField),
+wtforms.validators (DataRequired, ValidationError, Email, EqualTo, Length), datetime (datetime), config (Config), PIL (Image)
