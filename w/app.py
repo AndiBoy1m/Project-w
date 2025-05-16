@@ -12,7 +12,6 @@ from wtforms.validators import DataRequired, ValidationError, Email, EqualTo, Le
 from datetime import datetime
 from config import Config
 from PIL import Image
-import io
 
 app = Flask(__name__)
 app.config.from_object(Config)
